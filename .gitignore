@@ -3,3 +3,7 @@ songs.json
 covers/
 __pycache__/
 .DS_Store
+xcuserdata/
+DerivedData/
+*.xcworkspace/
+.DS_Store
