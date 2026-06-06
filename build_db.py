@@ -6,21 +6,29 @@ import re
 import sqlite3
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, APIC
+from pathlib import Path
+from dotenv import load_dotenv
 
-# Configuration
-# Put your music folder path here:
+# Load secret environment variables
+load_dotenv()
 
-MUSIC_DIR = "song_path"
+# Dynamic Configuration
+# Automatically finds the folder this script is running inside
+SERVER_DIR = Path(__file__).parent.absolute()
+DB_FILE = SERVER_DIR / "songs.json"
+COVERS_DIR = SERVER_DIR / "covers"
+SQL_FILE = SERVER_DIR / "music.db"
 
-# Put your server code folder path here (where the SQL DB and JSON backup will be stored):
-SERVER_DIR = "server_code_path"
-DB_FILE = os.path.join(SERVER_DIR, "songs.json")
-COVERS_DIR = os.path.join(SERVER_DIR, "covers")
-SQL_FILE = os.path.join(SERVER_DIR, "music.db")
+# Pull secrets from local .env file
+MUSIC_DIR = os.getenv("MUSIC_DIR")
+SERVER_IP = os.getenv("TAILSCALE_IP")
 
-# TAILSCALE IP
-# Put your Tailscale IP address here:
-SERVER_IP = "tailscale_ip_or_local_ip"
+if not MUSIC_DIR or not SERVER_IP:
+    raise RuntimeError(
+        "CRITICAL: MUSIC_DIR or TAILSCALE_IP is missing from the .env file!")
+
+# Convert MUSIC_DIR to a Path object for safety
+MUSIC_DIR = Path(MUSIC_DIR)
 
 
 def clean_filename(filename):
@@ -76,7 +84,7 @@ def build_and_sync():
 
     # Load existing JSON data to protect manual edits
     existing_db = {}
-    if os.path.exists(DB_FILE):
+    if DB_FILE.exists():
         try:
             with open(DB_FILE, 'r') as f:
                 data = json.load(f)
@@ -87,10 +95,10 @@ def build_and_sync():
 
     songs = []
 
-    if not os.path.exists(COVERS_DIR):
-        os.makedirs(COVERS_DIR)
+    if not COVERS_DIR.exists():
+        COVERS_DIR.mkdir(parents=True, exist_ok=True)
 
-    if not os.path.exists(MUSIC_DIR):
+    if not MUSIC_DIR.exists():
         print(f"❌ Error: Folder not found at {MUSIC_DIR}")
         return
 
@@ -105,10 +113,10 @@ def build_and_sync():
                 songs.append(existing_db[filename])
                 continue
 
-            # If it's a new song,run the Hybrid Scanner
+            # If it's a new song, run the Hybrid Scanner
             print(f"🆕 New song detected: {filename}. Scanning...")
 
-            file_path = os.path.join(MUSIC_DIR, filename)
+            file_path = MUSIC_DIR / filename
             raw_name = filename.replace(".mp3", "").replace(".MP3", "")
 
             title = raw_name
@@ -130,7 +138,7 @@ def build_and_sync():
                     for tag in audio.tags.values():
                         if isinstance(tag, APIC):
                             img_name = f"{filename}.jpg"
-                            img_path = os.path.join(COVERS_DIR, img_name)
+                            img_path = COVERS_DIR / img_name
                             with open(img_path, 'wb') as f:
                                 f.write(tag.data)
                             artwork_url = f"http://{SERVER_IP}:8000/cover/{urllib.parse.quote(img_name)}"

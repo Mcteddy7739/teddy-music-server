@@ -103,7 +103,7 @@ final class AudioPlayerManager: ObservableObject, @unchecked Sendable {
     @Published var bufferedTime: Double = 0
     @Published var isScrubbing: Bool = false
     
-    // Dual Colors for Mesh Background
+    // ⚡️ UPGRADE: Dual Colors for Mesh Background
     @Published var dominantColor: Color = Color.gray
     @Published var secondaryColor: Color = Color.blue
     
@@ -120,7 +120,8 @@ final class AudioPlayerManager: ObservableObject, @unchecked Sendable {
     private var timeObserver: Any?
     private var pingTimer: Timer?
     
-    let serverIP = "ur_tailscale_ip_here"
+    // 🔒 SECURED: Routing to the Environment Variable
+    let serverIP = Secrets.tailscaleIP
     
     init() {
         startPingMonitor()
@@ -514,7 +515,7 @@ final class AudioPlayerManager: ObservableObject, @unchecked Sendable {
         updateNowPlayingInfo()
     }
     
-    // Dual Color Space Extraction for Mesh Background
+    // ⚡️ UPGRADE: Dual Color Space Extraction for Mesh Background
     private func extractArtworkColors(from urlString: String) {
         guard let url = URL(string: urlString) else { return }
         Task { @MainActor [weak self] in
@@ -1087,13 +1088,13 @@ struct CreatePlaylistView: View {
     }
 }
 
-// MARK: - 7. Mini Player View
+// MARK: - 7. Mini Player View (⚡️ UPGRADE: Gesture Driven)
 struct MiniPlayerView: View {
     @ObservedObject var manager: AudioPlayerManager
     @Binding var showFullPlayer: Bool
     var animation: Namespace.ID
     
-    // State to track swipe movement visually
+    // ⚡️ State to track swipe movement visually
     @State private var dragOffset: CGFloat = 0
     
     var body: some View {
@@ -1121,7 +1122,7 @@ struct MiniPlayerView: View {
                         showFullPlayer = true
                     }
                 }
-                // Swipe Gestures to skip tracks directly from the Mini Player
+                // ⚡️ Swipe Gestures to skip tracks directly from the Mini Player!
                 .gesture(
                     DragGesture()
                         .onChanged { gesture in
@@ -1159,21 +1160,21 @@ struct MiniPlayerView: View {
     }
 }
 
-// MARK: - 8. Full Player View
+// MARK: - 8. Full Player View (⚡️ UPGRADE: 3D Flip & Mesh Background)
 struct FullPlayerView: View {
     @ObservedObject var manager: AudioPlayerManager
     @Binding var showFullPlayer: Bool
     var animation: Namespace.ID
     
     @State private var recordRotation: Double = 0
-    @State private var isShowingQueue = false // Tracks if the record is flipped
+    @State private var isShowingQueue = false // ⚡️ Tracks if the record is flipped
     
     let timer = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
     
     var body: some View {
         if let song = manager.currentSong {
             ZStack {
-                // Dynamic Mesh Fluid Background
+                // ⚡️ Dynamic Mesh Fluid Background
                 MeshFluidBackgroundView(primary: manager.dominantColor, secondary: manager.secondaryColor)
                 
                 VStack {
@@ -1190,7 +1191,7 @@ struct FullPlayerView: View {
                         Text("NOW PLAYING").font(.caption).bold().foregroundColor(.white.opacity(0.7))
                         Spacer()
                         
-                        //  Menu merged with the new 3D Queue Flip Button
+                        // ⚡️ Menu merged with the new 3D Queue Flip Button
                         HStack(spacing: 16) {
                             Button(action: {
                                 triggerHaptic()
@@ -1223,7 +1224,7 @@ struct FullPlayerView: View {
                     .padding(.top, 40)
                     Spacer()
 
-                    // 3D Flippable Record Container
+                    // ⚡️ 3D Flippable Record Container
                     ZStack {
                         if !isShowingQueue {
                             // Front of card: Spinning Record
@@ -1349,7 +1350,7 @@ struct VinylRecordGroovesOverlay: View {
     }
 }
 
-// MARK: - 10.  Animated Mesh Background
+// MARK: - 10. ⚡️ Animated Mesh Background
 struct MeshFluidBackgroundView: View {
     let primary: Color
     let secondary: Color
@@ -1387,7 +1388,7 @@ struct MeshFluidBackgroundView: View {
                     .linear(duration: 9.0).repeatForever(autoreverses: true)
                 }
             } else {
-                // Fallback for ip i3 iOS versions
+                // Fallback for older iOS versions
                 LinearGradient(gradient: Gradient(colors: [primary.opacity(0.9), secondary.opacity(0.2)]), startPoint: .top, endPoint: .bottom)
             }
         }

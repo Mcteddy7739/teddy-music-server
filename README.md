@@ -1,54 +1,71 @@
-# 🎵 Teddy Music
-<div align="center">
-  <img src="https://via.placeholder.com/800x400/1a1a1a/ffffff?text=Drop+Your+Awesome+App+GIF+Here" alt="Teddy Music Hero" width="100%">
+# Teddy Music
 
-  # 🎵 Teddy Music
+A self-hosted, Tailscale-routed iOS music player. This repository contains both the FastAPI Python backend and the native SwiftUI iOS frontend.
 
-  *An uncompromising, self-hosted iOS music ecosystem designed for the modern audio purist.*
-
-  [![SwiftUI](https://img.shields.io/badge/SwiftUI-15.0+-blue.svg?logo=swift&logoColor=white&style=for-the-badge)](https://developer.apple.com/xcode/swiftui/)
-  [![Python](https://img.shields.io/badge/Python-3.10+-FFD43B.svg?logo=python&logoColor=blue&style=for-the-badge)](https://www.python.org/)
-  [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?logo=fastapi&logoColor=white&style=for-the-badge)](https://fastapi.tiangolo.com/)
-  [![Tailscale](https://img.shields.io/badge/Tailscale-Zero_Trust-black.svg?logo=tailscale&logoColor=white&style=for-the-badge)](https://tailscale.com/)
-</div>
+## 🛠 Prerequisites
+Before you begin, ensure you have the following installed on your systems:
+* **Server (Mac/PC):** Python 3.10+ installed.
+* **Client (Mac):** Xcode 15+ installed.
+* **Network:** Tailscale installed and authenticated on both your Server and your iOS Device.
 
 ---
 
-## 🚀 The Vision
-**Teddy Music** bridges the gap between premium commercial streaming interfaces and private, self-hosted audio. It delivers a flagship native iOS frontend that securely streams high-fidelity local audio from a custom Python backend—all routed through a zero-trust Tailscale network. No subscriptions. No tracking. Just pure UI/UX perfection.
+## 🖥 Part 1: Backend Setup (The Server)
 
----
+The backend is responsible for scanning your local `.mp3` files, extracting ID3 tags, and serving the audio over a secure FastAPI endpoint.
 
-## ✨ Signature Features
-
-### 🎲 Spatial 3D Queue Flip
-> Engineered a custom 3D view matrix using `.rotation3DEffect`. Users can physically spin the active vinyl record 180° to reveal an interactive, gesture-ready upcoming queue.
-
-### 🌊 Algorithmic Mesh Background
-> Implemented a SwiftUI `PhaseAnimator` that continuously generates a fluid, breathing mesh gradient. It extracts primary and secondary colors directly from the active album art for a deeply immersive visual tone.
-
-### 📡 Telemetry Triangulation HUD
-> A custom-built real-time health monitor that pings the local iOS device, the Tailscale subnet, and the Mac Mini server to display outward internet latency in a sleek, non-intrusive pill layout.
-
-### 📳 Tactile Haptic Engine
-> Deep integration with `UIImpactFeedbackGenerator`, mapping UI layout transitions, playback toggles, and track skips to physical, satisfying Taptic Engine responses.
-
----
-
-## 🧠 Systems Architecture
-
-This repository is a **Monorepo** containing both the client and server codebases, communicating over a secure VPN.
-
-| 📱 The Client (iOS / SwiftUI) | 🖥️ The Server (Python / Mac Mini) | 🔐 The Network (Tailscale) |
-| :--- | :--- | :--- |
-| **Gesture-driven, MVVM architecture.** Utilizes `@StateObject` and modern `async/await` concurrency. Features a custom Double-Ended Queue (Deque) for seamless track shuffling without dropping main-thread frames. | **FastAPI & SQLite backend.** Features a hybrid ETL pipeline to scan raw MP3s, extract ID3 metadata via Mutagen, fetch missing album art from the iTunes API, and serve the payload with sub-millisecond latency. | **Zero-trust peer-to-peer subnet.** Audio streaming and API queries are strictly routed over Tailscale, completely bypassing traditional port-forwarding vulnerabilities. |
-
----
-
-## 🛠️ Quick Start Guide
-
-### 1. Boot the Backend Server
-Navigate to the server directory on your host machine and spin up the Uvicorn server:
+### 1. Clone the Repository
+Open your Terminal and clone this project:
 ```bash
-cd TEDDY_MUSIC_SERVER
-uvicorn main:app --host 0.0.0.0 --port 8000
+git clone [https://github.com/YOUR_USERNAME/teddy-music-server.git](https://github.com/YOUR_USERNAME/teddy-music-server.git)
+cd teddy-music-server
+2. Set Up the Python Virtual Environment
+To keep dependencies isolated, create and activate a virtual environment:
+Bash
+python3 -m venv .venv
+source .venv/bin/activate
+3. Install Dependencies
+Install the required Python packages directly into your virtual environment:
+Bash
+pip install fastapi "uvicorn[standard]" requests python-dotenv mutagen
+4. Configure Your Environment Variables
+You must tell the server where your music lives and what your Tailscale IP is.
+Create a file named .env in the root of the server folder.
+Add your absolute path to your music folder and your server's Tailscale IP address:
+Plaintext
+MUSIC_DIR=/Users/YourUsername/Path/To/Your/Songs
+TAILSCALE_IP=100.x.x.x
+(Note: Ensure your .env file is added to your .gitignore so it is not pushed to version control.)
+5. Build the Database
+Run the hybrid scanner. This script will read your MP3 files, extract ID3 tags, fetch missing high-resolution album art from the iTunes API, and build the music.db SQLite database:
+Bash
+python build_db.py
+6. Start the Server
+Boot up the Uvicorn server:
+Bash
+python main.py
+You should see a message confirming the server is live on Port 8000. Keep this terminal window running.
+📱 Part 2: Frontend Setup (The iOS Client)
+The frontend is a pure SwiftUI native iOS application featuring background playback, haptics, and live mesh gradients.
+1. Open the Project
+Navigate to the iOS folder and double-click TeddyMusicApp.xcodeproj to open it in Xcode.
+2. Configure Your Network Secrets
+The app needs to know where to find your server. Do not hardcode your IP address into the main code files.
+In Xcode, right-click your main app folder in the left navigator and select New File > Swift File.
+Name it Secrets.swift.
+Add the following code, replacing the IP with your server's exact Tailscale IP:
+Swift
+import Foundation
+
+struct Secrets {
+    static let tailscaleIP = "100.x.x.x" 
+}
+(Note: Ensure Secrets.swift is added to your .gitignore.)
+3. Build and Run
+Connect your physical iPhone to your Mac via USB.
+Select your iPhone from the device target list at the top of Xcode.
+Hit Cmd + R to Build and Run.
+Important Note: Background audio capabilities, Control Center transport controls, and Taptic Engine haptics will not function correctly on the Xcode Simulator. You must deploy to a physical iOS device to test these features.
+🛑 Troubleshooting
+App won't load music / shows 🔴 Offline: Ensure Tailscale is actively connected on both the Mac server and the iPhone. Check that the IP address in Secrets.swift perfectly matches the Mac's Tailscale IP.
+ModuleNotFoundError when running Python: Ensure your virtual environment is active (source .venv/bin/activate) before running main.py or build_db.py.
